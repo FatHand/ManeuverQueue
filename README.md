@@ -27,16 +27,13 @@ A-Z
 
 ## Known Issues
 
-This is a very simple plugin but is also my first foray into KSP modding. It has not been thoroughly tested, and although I have no reason to believe anyone would encounter serious game-corrupting issues, back up your save game until your confident it works well for you. That said, these things could use some testing and feedback from anyone who's feeling helpful: 
+This is a very simple plugin but is also my first foray into KSP modding. It has not been thoroughly tested, and although I have no reason to believe anyone would encounter serious game-corrupting issues, back up you're save game until your confident it works well for you. That said, these things could use some testing and feedback from anyone who's feeling helpful: 
 
 - Layout on various screen configurations
 - New objects spawning in the Tracking Station (e.g. Unknown Objects)
-- Renaming in the Tracking Staion (currently disbaled in 1.1.3?)
+- Renaming in the Tracking Station (currently disbaled in 1.1.3?)
 - Tracking/Untracking objects
 
 ## Bugs and Feature Requests
 
-Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v01/#comment-2730439] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v01/#comment-2730439)
-
-
- 
+Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v01/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v01/)
