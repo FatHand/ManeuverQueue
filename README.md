@@ -4,7 +4,7 @@ ManeuverQueue is an add on for Kerbal Space Program that allows you to sort and 
 
 ## Installation
 
-You can build from source or download here [https://kerbal.curseforge.com/projects/ksp-maneuverqueue] (https://kerbal.curseforge.com/projects/ksp-maneuverqueue). Add the contents of the archive to your KSP GameData folder. 
+You can build from source or download here [https://github.com/FatHand/ManeuverQueue/releases/tag/v0.1] (https://github.com/FatHand/ManeuverQueue/releases/tag/v0.1). Add the contents of the archive to your KSP GameData folder. 
 
 ## Usage
 
@@ -27,7 +27,7 @@ A-Z
 
 ## Known Issues
 
-This is a very simple plugin but is also my first foray into KSP modding. It has not been thoroughly tested, and although I have no reason to believe anyone would encounter serious game-corrupting issues, back up you're save game until your confident it works well for you. That said, these things could use some testing and feedback from anyone who's feeling helpful: 
+This is a very simple plugin but is also my first foray into KSP modding. It has not been thoroughly tested, and although I have no reason to believe anyone would encounter serious game-corrupting issues, back up your save game until you're confident it works well for you. That said, these things could use some testing and feedback from anyone who's feeling helpful: 
 
 - Layout on various screen configurations
 - New objects spawning in the Tracking Station (e.g. Unknown Objects)
