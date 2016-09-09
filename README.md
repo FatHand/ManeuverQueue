@@ -4,7 +4,7 @@ ManeuverQueue is an add on for Kerbal Space Program that allows you to sort and 
 
 ## Installation
 
-You can build from source or download here [https://github.com/FatHand/ManeuverQueue/releases/tag/v0.1] (https://github.com/FatHand/ManeuverQueue/releases/tag/v0.1). Add the contents of the archive to your KSP GameData folder. 
+You can build from source or download here [https://github.com/FatHand/ManeuverQueue/releases] (https://github.com/FatHand/ManeuverQueue/releases). Add the contents of the archive to your KSP GameData folder. 
 
 ## Usage
 
@@ -20,6 +20,12 @@ MNV
 - Sorts ships by maneuver node time, earliest first
 - Ships with maneuver node times in the past will appear at the top of the list
 - A ship is only listed once even if it has multiple maneuver nodes
+- Color coding
+  - Yellow
+    - Two ships' next maneuver nodes are less than 15m apart
+    - A ship's next maneuver node is less than 15m away
+  - Red
+    - The ship's next maneuver node is in the past
 
 A-Z
 
@@ -27,12 +33,7 @@ A-Z
 
 ## Known Issues
 
-This is a very simple plugin but is also my first foray into KSP modding. It has not been thoroughly tested, and although I have no reason to believe anyone would encounter serious game-corrupting issues, back up your save game until you're confident it works well for you. That said, these things could use some testing and feedback from anyone who's feeling helpful: 
-
-- Layout on various screen configurations
-- New objects spawning in the Tracking Station (e.g. Unknown Objects)
-- Renaming in the Tracking Station (currently disbaled in 1.1.3?)
-- Tracking/Untracking objects
+- Certain tracking station operations such as untracking an object, terminating a vessel, or switching vessel filters causes the list to flicker momentarily
 
 ## Bugs and Feature Requests
 
