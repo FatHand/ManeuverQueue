@@ -4,14 +4,17 @@ using System.Linq;
 using System.Reflection;
 
 using KSP.UI.Screens;
+using KSP.IO;
 
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace FatHand
 {
 	[KSPAddon(KSPAddon.Startup.TrackingStation, false)]
 	public class ManeuverQueue : MonoBehaviour
 	{
+
 		public enum FilterMode { Default, Maneuver, Name };
 
 		public static string[] filterModeLabels;
@@ -36,7 +39,14 @@ namespace FatHand
 		protected Rect windowPos;
 		protected GUIStyle windowStyle;
 		protected bool render;
+		protected bool needsWidgetColorRender;
+		protected const double minimumManeuverDeltaT = 15.0 * 60.0;
+		protected Color nodePassedColor = new Color(231.0f / 255, 106.0f / 255, 106.0f / 255, 1);
+		protected Color nodeWarningColor = new Color(254.0f / 255, 178.0f / 255, 0.0f / 255, 1);
 
+		private static string configurationModeKey = "mode";
+
+		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
 		private Rect sideBarRect;
 		private FilterMode _currentMode;
 		private List<Vessel> _defaultVessels;
@@ -83,10 +93,14 @@ namespace FatHand
 			GameEvents.onGameSceneSwitchRequested.Add(this.onGameSceneSwitchRequested);
 			GameEvents.onVesselDestroy.Add(this.onVesselDestroy);
 			GameEvents.onVesselCreate.Add(this.onVesselCreate);
+			GameEvents.onKnowledgeChanged.Add(this.onKnowledgeChanged);
+			GameEvents.OnMapViewFiltersModified.Add(this.onMapViewFiltersModified);
+
 
 			ManeuverQueue.filterModeLabels = Enum.GetValues(typeof(FilterMode)).Cast<FilterMode>().Select(x => ManeuverQueue.LabelForFilterMode(x)).ToArray();
 
-			this.currentMode = FilterMode.Default;
+			this.pluginConfiguration.load();
+			this.currentMode = (FilterMode)this.pluginConfiguration.GetValue<int>(ManeuverQueue.configurationModeKey, (int)FilterMode.Default);
 
 			this.render = true;
 		}
@@ -105,7 +119,11 @@ namespace FatHand
 
 			GameEvents.onVesselDestroy.Remove(this.onVesselDestroy);
 			GameEvents.onVesselCreate.Remove(this.onVesselCreate);
+			GameEvents.onKnowledgeChanged.Remove(this.onKnowledgeChanged);
+			GameEvents.OnMapViewFiltersModified.Remove(this.onMapViewFiltersModified);
 
+			this.pluginConfiguration.SetValue(ManeuverQueue.configurationModeKey, (int)this.currentMode);
+			this.pluginConfiguration.save();
 		}
 
 
@@ -117,10 +135,28 @@ namespace FatHand
 		private void OnGUI()
 		{
 
-			if (render)
+			if (this.render)
 			{
-
 				this.windowPos = GUILayout.Window(1, this.windowPos, this.ToolbarWindow, "", this.windowStyle, new GUILayoutOption[0]);
+
+				List<TrackingStationWidget> vesselWidgets = this.GetTrackingStationWidgets();
+
+				// apply shading to vessel icons
+				if (this.currentMode == FilterMode.Maneuver)
+				{
+					for (var i = 0; i < vesselWidgets.Count(); ++i)
+					{
+						TrackingStationWidget widget = vesselWidgets.ElementAt(i);
+						this.UpdateWidgetColorForCurrentTime(widget);
+					}
+
+					if (this.needsWidgetColorRender)
+					{
+						this.RenderWidgetColors();
+					}
+
+				}
+
 			}
 
 
@@ -189,6 +225,91 @@ namespace FatHand
 			clearMethod.Invoke(this.spaceTrackingScene, new object[0]);
 			constructMethod.Invoke(this.spaceTrackingScene, new object[0]);
 
+			this.needsWidgetColorRender = true;
+
+			this.ResetWidgetsForActiveVessel();
+		}
+
+		protected void RenderWidgetColors()
+		{
+			this.needsWidgetColorRender = false;
+
+			// apply shading to vessel icons
+			if (this.currentMode == FilterMode.Maneuver)
+			{
+				List<TrackingStationWidget> vesselWidgets = this.GetTrackingStationWidgets();
+				for (var i = 0; i < vesselWidgets.Count(); ++i)
+				{
+					TrackingStationWidget widget = vesselWidgets.ElementAt(i);
+
+					// if two maneuver nodes are less than minimumManeuverDeltaT secs apart - yellow
+					if (i < vesselWidgets.Count() - 1)
+					{
+						TrackingStationWidget nextWidget = vesselWidgets.ElementAt(i + 1);
+
+						double mnvTime1 = this.GetVesselManeuverTime(widget.vessel);
+						double mnvTime2 = this.GetVesselManeuverTime(nextWidget.vessel);
+
+						if (mnvTime2 - mnvTime1 < minimumManeuverDeltaT)
+						{
+
+							this.ApplyColorToVesselWidget(widget, this.nodeWarningColor);
+							this.ApplyColorToVesselWidget(nextWidget, this.nodeWarningColor);
+
+
+						}
+
+
+
+					}
+
+					this.UpdateWidgetColorForCurrentTime(widget);
+
+				}
+			}
+
+		}
+
+		protected void ApplyColorToVesselWidget(TrackingStationWidget widget, Color color)
+		{
+			var image = (Image)widget.iconSprite.GetType().GetField("image", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(widget.iconSprite);
+			image.color = color;
+		}
+
+		protected void UpdateWidgetColorForCurrentTime(TrackingStationWidget widget)
+		{
+
+			double maneuverTime = this.GetVesselManeuverTime(widget.vessel);
+
+			// if the maneuver node is less than 15mins away - yellow
+			if (maneuverTime < Planetarium.GetUniversalTime() + minimumManeuverDeltaT)
+			{
+
+				this.ApplyColorToVesselWidget(widget, this.nodeWarningColor);
+
+
+			}
+
+			// if the maneuver nodes is in the past - red
+			if (maneuverTime < Planetarium.GetUniversalTime())
+			{
+
+				this.ApplyColorToVesselWidget(widget, this.nodePassedColor);
+
+
+			}
+
+		}
+
+		protected double GetVesselManeuverTime(Vessel vessel)
+		{
+			if (vessel.flightPlanNode != null && vessel.flightPlanNode.HasNode("MANEUVER"))
+			{
+				return Convert.ToDouble(vessel.flightPlanNode.GetNode("MANEUVER").GetValue("UT"));
+			}
+
+			return 0;
+
 		}
 
 		protected List<Vessel> GetTrackedVessels()
@@ -198,9 +319,39 @@ namespace FatHand
 				return null;
 			}
 
-			var originalVessels = (List<Vessel>)this.spaceTrackingScene.GetType().GetField("trackedVessels", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
+			List<Vessel> originalVessels = (List<Vessel>)this.spaceTrackingScene.GetType().GetField("trackedVessels", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
 
 			return new List<Vessel>(originalVessels);
+		}
+
+		protected List<TrackingStationWidget> GetTrackingStationWidgets()
+		{
+			return (List<TrackingStationWidget>)this.spaceTrackingScene.GetType().GetField("vesselWidgets", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
+		}
+
+		protected Vessel GetTrackingStationSelectedVessel()
+		{
+			return (Vessel)this.spaceTrackingScene.GetType().GetField("selectedVessel", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
+		}
+
+		protected void SetTrackingStationSelectedVessel(Vessel vessel)
+		{
+			Debug.Log("Setting active vessel: " + vessel.ToString());
+			MethodInfo setVesselMethod = this.spaceTrackingScene.GetType().GetMethod("SetVessel", BindingFlags.NonPublic | BindingFlags.Instance);
+
+			setVesselMethod.Invoke(this.spaceTrackingScene, new object[] { vessel, true });
+
+		}
+
+		protected void ResetWidgetsForActiveVessel()
+		{
+			Vessel selectedVessel = this.GetTrackingStationSelectedVessel();
+
+			foreach (TrackingStationWidget widget in this.GetTrackingStationWidgets())
+			{
+				widget.toggle.isOn = widget.vessel == selectedVessel;
+
+			}
 		}
 
 		// Private
@@ -226,11 +377,23 @@ namespace FatHand
 			this.currentVesselList = null;
 		}
 
-		private void onVesselRename(Vessel vessel)
+		private void onKnowledgeChanged(GameEvents.HostedFromToAction<IDiscoverable, DiscoveryLevels> data)
 		{
+			if ((data.to & DiscoveryLevels.Unowned) == DiscoveryLevels.Unowned && this.currentMode == FilterMode.Maneuver)
+			{
+				this.currentMode = FilterMode.Default;
+			}
+
 			this.defaultVessels = null;
 			this.currentVesselList = null;
 		}
+
+		private void onMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
+		{
+			this.needsWidgetColorRender = true;
+		}
+
+
 
 		// Public static
 
