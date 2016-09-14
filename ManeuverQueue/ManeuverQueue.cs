@@ -43,14 +43,8 @@ namespace FatHand
 		protected const double minimumManeuverDeltaT = 15.0 * 60.0;
 		protected Color nodePassedColor = new Color(231.0f / 255, 106.0f / 255, 106.0f / 255, 1);
 		protected Color nodeWarningColor = new Color(254.0f / 255, 178.0f / 255, 0.0f / 255, 1);
-
-		private static string configurationModeKey = "mode";
-
-		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
-		private Rect sideBarRect;
-		private FilterMode _currentMode;
-		private List<Vessel> _defaultVessels;
-		private List<Vessel> defaultVessels
+		protected List<Vessel> currentVesselList;
+		protected List<Vessel> defaultVessels
 		{
 			get
 			{
@@ -66,15 +60,21 @@ namespace FatHand
 			}
 		}
 
-		private List<Vessel> currentVesselList;
+		private static string configurationModeKey = "mode";
+
+		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
+		private Rect sideBarRect;
+		private FilterMode _currentMode;
+		private List<Vessel> _defaultVessels;
+
 
 
 		// Lifecycle
-		private void Awake()
+		protected void Awake()
 		{
 		}
 
-		private void Start()
+		protected void Start()
 		{
 			const float WINDOW_VERTICAL_POSITION = 36;
 
@@ -100,20 +100,20 @@ namespace FatHand
 			ManeuverQueue.filterModeLabels = Enum.GetValues(typeof(FilterMode)).Cast<FilterMode>().Select(x => ManeuverQueue.LabelForFilterMode(x)).ToArray();
 
 			this.pluginConfiguration.load();
-			this.currentMode = (FilterMode)this.pluginConfiguration.GetValue<int>(ManeuverQueue.configurationModeKey, (int)FilterMode.Default);
+			this.currentMode = (FilterMode)this.pluginConfiguration.GetValue(ManeuverQueue.configurationModeKey, (int)FilterMode.Default);
 
 			this.render = true;
 		}
 
-		private void Update()
+		protected void Update()
 		{
 		}
 
-		private void FixedUpdate()
+		protected void FixedUpdate()
 		{
 		}
 
-		private void OnDestroy()
+		protected void OnDestroy()
 		{
 			GameEvents.onGameSceneSwitchRequested.Remove(this.onGameSceneSwitchRequested);
 
@@ -132,9 +132,8 @@ namespace FatHand
 			render = false;
 		}
 
-		private void OnGUI()
+		protected void OnGUI()
 		{
-
 			if (this.render)
 			{
 				this.windowPos = GUILayout.Window(1, this.windowPos, this.ToolbarWindow, "", this.windowStyle, new GUILayoutOption[0]);
@@ -336,7 +335,6 @@ namespace FatHand
 
 		protected void SetTrackingStationSelectedVessel(Vessel vessel)
 		{
-			Debug.Log("Setting active vessel: " + vessel.ToString());
 			MethodInfo setVesselMethod = this.spaceTrackingScene.GetType().GetMethod("SetVessel", BindingFlags.NonPublic | BindingFlags.Instance);
 
 			setVesselMethod.Invoke(this.spaceTrackingScene, new object[] { vessel, true });
