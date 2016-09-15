@@ -45,4 +45,4 @@ A-Z
 
 ## Bugs and Feature Requests
 
-Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v02/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-113-maneuverqueue-v02/)
+Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v021/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v021/)
