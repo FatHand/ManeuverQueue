@@ -33,7 +33,7 @@ namespace FatHand
 				}
 			}
 		}
-					
+
 
 		protected SpaceTracking spaceTrackingScene;
 		protected Rect windowPos;
@@ -44,6 +44,7 @@ namespace FatHand
 		protected Color nodePassedColor = new Color(231.0f / 255, 106.0f / 255, 106.0f / 255, 1);
 		protected Color nodeWarningColor = new Color(254.0f / 255, 178.0f / 255, 0.0f / 255, 1);
 		protected List<Vessel> currentVesselList;
+
 		protected List<Vessel> defaultVessels
 		{
 			get
@@ -60,12 +61,47 @@ namespace FatHand
 			}
 		}
 
+		protected List<Vessel> vesselsSortedByNextManeuverNode
+		{
+			get
+			{
+				if (_vesselsSortedByNextManeuverNode == null) {
+					_vesselsSortedByNextManeuverNode = this.VesselsSortedByNextManeuverNode();
+				}
+				return _vesselsSortedByNextManeuverNode;
+			}
+
+			set
+			{
+				_vesselsSortedByNextManeuverNode = value;
+			}
+		}
+
+		protected List<Vessel> vesselsSortedByName
+		{
+			get
+			{
+				if (_vesselsSortedByName == null)
+				{
+					_vesselsSortedByName = this.VesselsSortedByName();
+				}
+				return _vesselsSortedByName;
+			}
+
+			set
+			{
+				_vesselsSortedByName = value;
+			}
+		}
+
 		private static string configurationModeKey = "mode";
 
 		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
 		private Rect sideBarRect;
 		private FilterMode _currentMode;
 		private List<Vessel> _defaultVessels;
+		private List<Vessel> _vesselsSortedByNextManeuverNode;
+		private List<Vessel> _vesselsSortedByName;
 
 
 
@@ -138,17 +174,15 @@ namespace FatHand
 			{
 				this.windowPos = GUILayout.Window(1, this.windowPos, this.ToolbarWindow, "", this.windowStyle, new GUILayoutOption[0]);
 
-				List<TrackingStationWidget> vesselWidgets = this.GetTrackingStationWidgets();
-
-				// apply shading to vessel icons
 				if (this.currentMode == FilterMode.Maneuver)
 				{
-					for (var i = 0; i < vesselWidgets.Count(); ++i)
+					// apply shading to vessel icons for maneuver nodes that have just moved into the past or soon state
+					foreach (TrackingStationWidget widget in this.GetTrackingStationWidgets())
 					{
-						TrackingStationWidget widget = vesselWidgets.ElementAt(i);
 						this.UpdateWidgetColorForCurrentTime(widget);
 					}
 
+					// reapply shading for close maneuver nodes if necessary
 					if (this.needsWidgetColorRender)
 					{
 						this.RenderWidgetColors();
@@ -161,32 +195,26 @@ namespace FatHand
 
 		}
 
-		// Protected
 		protected void SetVesselListForMode(FilterMode mode)
 		{
 			switch (mode)
 			{
 				case FilterMode.Default:
-					this.SetVesselList(VesselsUnsorted());
+					this.SetVesselList(this.defaultVessels);
 					break;
 				case FilterMode.Maneuver:
-					this.SetVesselList(VesselsSortedByNextManeuverNode());
+					this.SetVesselList(this.vesselsSortedByNextManeuverNode);
 					break;
 				case FilterMode.Name:
-					this.SetVesselList(VesselsSortedByName());
+					this.SetVesselList(this.vesselsSortedByName);
 					break;
 				default:
-					this.SetVesselList(VesselsUnsorted());
+					this.SetVesselList(this.defaultVessels);
 					break;
 			}
 		}
 
-		protected List<Vessel> VesselsUnsorted()
-		{
-			return this.defaultVessels;
-		}
-
-		protected List<Vessel> VesselsSortedByName()
+		private List<Vessel> VesselsSortedByName()
 		{
 
 			var originalVessels = new List<Vessel>(this.defaultVessels);
@@ -196,7 +224,7 @@ namespace FatHand
 
 		}
 
-		protected List<Vessel> VesselsSortedByNextManeuverNode()
+		private List<Vessel> VesselsSortedByNextManeuverNode()
 		{
 			var originalVessels = new List<Vessel>(this.defaultVessels);
 
@@ -236,33 +264,38 @@ namespace FatHand
 			// apply shading to vessel icons
 			if (this.currentMode == FilterMode.Maneuver)
 			{
-				List<TrackingStationWidget> vesselWidgets = this.GetTrackingStationWidgets();
-				for (var i = 0; i < vesselWidgets.Count(); ++i)
+				for (var i = 0; i < this.vesselsSortedByNextManeuverNode.Count() - 1; ++i)
 				{
-					TrackingStationWidget widget = vesselWidgets.ElementAt(i);
+					Vessel vessel = this.vesselsSortedByNextManeuverNode.ElementAt(i);
+					Vessel nextVessel = this.vesselsSortedByNextManeuverNode.ElementAt(i + 1);
+
+					TrackingStationWidget vesselWidget = this.GetWidgetForVessel(vessel);
+
+					double mnvTime1 = this.GetVesselManeuverTime(vessel);
+					double mnvTime2 = this.GetVesselManeuverTime(nextVessel);
 
 					// if two maneuver nodes are less than minimumManeuverDeltaT secs apart - yellow
-					if (i < vesselWidgets.Count() - 1)
+					if (mnvTime2 - mnvTime1 < minimumManeuverDeltaT)
 					{
-						TrackingStationWidget nextWidget = vesselWidgets.ElementAt(i + 1);
+						TrackingStationWidget nextVesselWidget = this.GetWidgetForVessel(nextVessel);
 
-						double mnvTime1 = this.GetVesselManeuverTime(widget.vessel);
-						double mnvTime2 = this.GetVesselManeuverTime(nextWidget.vessel);
 
-						if (mnvTime2 - mnvTime1 < minimumManeuverDeltaT)
+						if (vesselWidget != null)
 						{
-
-							this.ApplyColorToVesselWidget(widget, this.nodeWarningColor);
-							this.ApplyColorToVesselWidget(nextWidget, this.nodeWarningColor);
-
-
+							this.ApplyColorToVesselWidget(vesselWidget, this.nodeWarningColor);
 						}
 
 
-
+						if (nextVesselWidget != null)
+						{
+							this.ApplyColorToVesselWidget(nextVesselWidget, this.nodeWarningColor);
+						}
 					}
 
-					this.UpdateWidgetColorForCurrentTime(widget);
+					if (vesselWidget)
+					{
+						this.UpdateWidgetColorForCurrentTime(vesselWidget);
+					}
 
 				}
 			}
@@ -328,6 +361,19 @@ namespace FatHand
 			return (List<TrackingStationWidget>)this.spaceTrackingScene.GetType().GetField("vesselWidgets", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
 		}
 
+		protected TrackingStationWidget GetWidgetForVessel(Vessel vessel)
+		{
+			foreach (TrackingStationWidget widget in this.GetTrackingStationWidgets())
+			{
+				if (widget.vessel == vessel)
+				{
+					return widget;
+				}
+			}
+
+			return null;
+		}
+
 		protected Vessel GetTrackingStationSelectedVessel()
 		{
 			return (Vessel)this.spaceTrackingScene.GetType().GetField("selectedVessel", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.spaceTrackingScene);
@@ -352,7 +398,6 @@ namespace FatHand
 			}
 		}
 
-		// Private
 		private void ToolbarWindow(int windowID)
 		{
 			this.currentMode = (FilterMode)GUILayout.Toolbar((int)this.currentMode,
@@ -365,14 +410,13 @@ namespace FatHand
 
 		private void onVesselDestroy(Vessel vessel)
 		{
-			this.defaultVessels = null;
-			this.currentVesselList = null;
+			this.ClearCachedVesselLists();
+
 		}
 
 		private void onVesselCreate(Vessel vessel)
 		{
-			this.defaultVessels = null;
-			this.currentVesselList = null;
+			this.ClearCachedVesselLists();
 		}
 
 		private void onKnowledgeChanged(GameEvents.HostedFromToAction<IDiscoverable, DiscoveryLevels> data)
@@ -382,8 +426,7 @@ namespace FatHand
 				this.currentMode = FilterMode.Default;
 			}
 
-			this.defaultVessels = null;
-			this.currentVesselList = null;
+			this.ClearCachedVesselLists();
 		}
 
 		private void onMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
@@ -391,9 +434,13 @@ namespace FatHand
 			this.needsWidgetColorRender = true;
 		}
 
-
-
-		// Public static
+		private void ClearCachedVesselLists()
+		{
+			this.defaultVessels = null;
+			this.currentVesselList = null;
+			this.vesselsSortedByName = null;
+			this.vesselsSortedByNextManeuverNode = null;
+		}
 
 		public static string LabelForFilterMode(FilterMode mode)
 		{
