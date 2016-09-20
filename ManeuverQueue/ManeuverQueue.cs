@@ -15,7 +15,12 @@ namespace FatHand
 	public class ManeuverQueue : MonoBehaviour
 	{
 
-		public enum FilterMode { Undefined = -1, Default, Maneuver, Name };
+		public enum FilterMode { 
+			Undefined = -1, 
+			Default, 
+			Maneuver, 
+			Name 
+		};
 
 		public static string[] filterModeLabels;
 		public FilterMode currentMode
@@ -30,6 +35,13 @@ namespace FatHand
 				{
 					_currentMode = value;
 					this.SetVesselListForMode(_currentMode);
+
+					// Unless the mode is undefined, persist the value (saved in onDestroy)
+					if (_currentMode != FilterMode.Undefined)
+					{
+						this.pluginConfiguration.SetValue(ManeuverQueue.configurationModeKey, (int)_currentMode);
+					}
+
 				}
 			}
 		}
@@ -97,7 +109,7 @@ namespace FatHand
 
 		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
 		private Rect sideBarRect;
-		private FilterMode _currentMode;
+		private FilterMode _currentMode = FilterMode.Undefined;
 		private List<Vessel> _defaultVessels;
 		private List<Vessel> _vesselsSortedByNextManeuverNode;
 		private List<Vessel> _vesselsSortedByName;
@@ -132,7 +144,9 @@ namespace FatHand
 			GameEvents.OnMapViewFiltersModified.Add(this.onMapViewFiltersModified);
 
 
-			ManeuverQueue.filterModeLabels = Enum.GetValues(typeof(FilterMode)).Cast<FilterMode>().Select(x => ManeuverQueue.LabelForFilterMode(x)).ToArray();
+			ManeuverQueue.filterModeLabels = Enum.GetValues(typeof(FilterMode)).Cast<FilterMode>().Where(
+				x => x != FilterMode.Undefined).Select(
+					x => ManeuverQueue.LabelForFilterMode(x)).ToArray();
 
 			this.pluginConfiguration.load();
 			this.currentMode = (FilterMode)this.pluginConfiguration.GetValue(ManeuverQueue.configurationModeKey, (int)FilterMode.Default);
@@ -157,8 +171,8 @@ namespace FatHand
 			GameEvents.onKnowledgeChanged.Remove(this.onKnowledgeChanged);
 			GameEvents.OnMapViewFiltersModified.Remove(this.onMapViewFiltersModified);
 
-			this.pluginConfiguration.SetValue(ManeuverQueue.configurationModeKey, (int)this.currentMode);
 			this.pluginConfiguration.save();
+
 		}
 
 
@@ -230,8 +244,8 @@ namespace FatHand
 		{
 			var originalVessels = new List<Vessel>(this.defaultVessels);
 
-			List<Vessel> filteredVessels = originalVessels.Where(vessel => (vessel.flightPlanNode != null && vessel.flightPlanNode.HasNode("MANEUVER"))).ToList();
-			filteredVessels.Sort((x, y) => Convert.ToDouble(x.flightPlanNode.GetNode("MANEUVER").GetValue("UT")).CompareTo(Convert.ToDouble(y.flightPlanNode.GetNode("MANEUVER").GetValue("UT"))));
+			List<Vessel> filteredVessels = originalVessels.Where(vessel => (this.NextManeuverNodeForVessel(vessel) != null)).ToList();
+			filteredVessels.Sort((x, y) => this.NextManeuverNodeForVessel(x).UT.CompareTo(this.NextManeuverNodeForVessel(y).UT));
 
 			return filteredVessels;
 
@@ -271,8 +285,8 @@ namespace FatHand
 
 					TrackingStationWidget vesselWidget = this.GetWidgetForVessel(vessel);
 
-					double mnvTime1 = this.GetVesselManeuverTime(vessel);
-					double mnvTime2 = this.GetVesselManeuverTime(nextVessel);
+					double mnvTime1 = this.NextManeuverNodeForVessel(vessel).UT;
+					double mnvTime2 = this.NextManeuverNodeForVessel(nextVessel).UT;
 
 					// if two maneuver nodes are less than minimumManeuverDeltaT secs apart - yellow
 					if (mnvTime2 - mnvTime1 < minimumManeuverDeltaT)
@@ -302,6 +316,31 @@ namespace FatHand
 
 		}
 
+		protected string StatusStringForVessel(Vessel vessel)
+		{
+			ManeuverNode node = this.NextManeuverNodeForVessel(vessel);
+
+			if (node != null)
+			{
+
+				return "dV - " + Convert.ToInt16(node.DeltaV.magnitude) + "m/s";
+			}
+
+			return "None";
+		}
+
+		protected ManeuverNode NextManeuverNodeForVessel(Vessel vessel)
+		{
+			if (vessel.flightPlanNode != null && vessel.flightPlanNode.HasNode("MANEUVER"))
+			{
+				ManeuverNode node = new ManeuverNode();
+				node.Load(vessel.flightPlanNode.GetNode("MANEUVER"));
+				return node;
+			}
+
+			return null;
+		}
+
 		protected void ApplyColorToVesselWidget(TrackingStationWidget widget, Color color)
 		{
 			var image = (Image)widget.iconSprite.GetType().GetField("image", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(widget.iconSprite);
@@ -311,7 +350,7 @@ namespace FatHand
 		protected void UpdateWidgetColorForCurrentTime(TrackingStationWidget widget)
 		{
 
-			double maneuverTime = this.GetVesselManeuverTime(widget.vessel);
+			double maneuverTime = this.NextManeuverNodeForVessel(widget.vessel).UT;
 
 			// if the maneuver node is less than 15mins away - yellow
 			if (maneuverTime < Planetarium.GetUniversalTime() + minimumManeuverDeltaT)
@@ -330,17 +369,6 @@ namespace FatHand
 
 
 			}
-
-		}
-
-		protected double GetVesselManeuverTime(Vessel vessel)
-		{
-			if (vessel.flightPlanNode != null && vessel.flightPlanNode.HasNode("MANEUVER"))
-			{
-				return Convert.ToDouble(vessel.flightPlanNode.GetNode("MANEUVER").GetValue("UT"));
-			}
-
-			return 0;
 
 		}
 
