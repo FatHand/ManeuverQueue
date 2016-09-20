@@ -15,7 +15,7 @@ namespace FatHand
 	public class ManeuverQueue : MonoBehaviour
 	{
 
-		public enum FilterMode { Default, Maneuver, Name };
+		public enum FilterMode { Undefined = -1, Default, Maneuver, Name };
 
 		public static string[] filterModeLabels;
 		public FilterMode currentMode
@@ -26,7 +26,7 @@ namespace FatHand
 			}
 			set
 			{
-				if (value != _currentMode || currentVesselList == null)
+				if (value != _currentMode)
 				{
 					_currentMode = value;
 					this.SetVesselListForMode(_currentMode);
@@ -43,7 +43,6 @@ namespace FatHand
 		protected const double minimumManeuverDeltaT = 15.0 * 60.0;
 		protected Color nodePassedColor = new Color(231.0f / 255, 106.0f / 255, 106.0f / 255, 1);
 		protected Color nodeWarningColor = new Color(254.0f / 255, 178.0f / 255, 0.0f / 255, 1);
-		protected List<Vessel> currentVesselList;
 
 		protected List<Vessel> defaultVessels
 		{
@@ -176,6 +175,7 @@ namespace FatHand
 
 				if (this.currentMode == FilterMode.Maneuver)
 				{
+
 					// apply shading to vessel icons for maneuver nodes that have just moved into the past or soon state
 					foreach (TrackingStationWidget widget in this.GetTrackingStationWidgets())
 					{
@@ -199,6 +199,8 @@ namespace FatHand
 		{
 			switch (mode)
 			{
+				case FilterMode.Undefined:
+					break;
 				case FilterMode.Default:
 					this.SetVesselList(this.defaultVessels);
 					break;
@@ -241,8 +243,6 @@ namespace FatHand
 			{
 				return;
 			}
-
-			currentVesselList = vessels;
 
 			this.spaceTrackingScene.GetType().GetField("trackedVessels", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(this.spaceTrackingScene, vessels);
 
@@ -436,8 +436,8 @@ namespace FatHand
 
 		private void ClearCachedVesselLists()
 		{
+			this.currentMode = FilterMode.Undefined;
 			this.defaultVessels = null;
-			this.currentVesselList = null;
 			this.vesselsSortedByName = null;
 			this.vesselsSortedByNextManeuverNode = null;
 		}
