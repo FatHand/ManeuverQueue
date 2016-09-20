@@ -14,7 +14,6 @@ namespace FatHand
 	[KSPAddon(KSPAddon.Startup.TrackingStation, false)]
 	public class ManeuverQueue : MonoBehaviour
 	{
-
 		public enum FilterMode { 
 			Undefined = -1, 
 			Default, 
@@ -33,6 +32,13 @@ namespace FatHand
 			{
 				if (value != _currentMode)
 				{
+					// if we're switching from any mode other than maneuver mode, save the filter state
+					if (_currentMode != FilterMode.Maneuver && _currentMode != FilterMode.Undefined)
+					{
+						ManeuverQueue.savedFilterState = MapViewFiltering.vesselTypeFilter;
+
+					}
+
 					_currentMode = value;
 					this.SetVesselListForMode(_currentMode);
 
@@ -43,6 +49,7 @@ namespace FatHand
 					}
 
 				}
+
 			}
 		}
 
@@ -106,6 +113,8 @@ namespace FatHand
 		}
 
 		private static string configurationModeKey = "mode";
+		private static string configurationFiltersKey = "filters";
+
 
 		private PluginConfiguration pluginConfiguration = PluginConfiguration.CreateForType<ManeuverQueue>();
 		private Rect sideBarRect;
@@ -113,6 +122,7 @@ namespace FatHand
 		private List<Vessel> _defaultVessels;
 		private List<Vessel> _vesselsSortedByNextManeuverNode;
 		private List<Vessel> _vesselsSortedByName;
+		private static MapViewFiltering.VesselTypeFilter savedFilterState;
 
 
 
@@ -124,6 +134,19 @@ namespace FatHand
 		protected void Start()
 		{
 			const float WINDOW_VERTICAL_POSITION = 36;
+
+			this.pluginConfiguration.load();
+
+			if (MapViewFiltering.vesselTypeFilter != MapViewFiltering.VesselTypeFilter.All)
+			{
+				ManeuverQueue.savedFilterState = MapViewFiltering.vesselTypeFilter;
+			}
+			else {
+				ManeuverQueue.savedFilterState = (MapViewFiltering.VesselTypeFilter)this.pluginConfiguration.GetValue(ManeuverQueue.configurationFiltersKey, (int)MapViewFiltering.VesselTypeFilter.All);
+			}
+
+			this.pluginConfiguration.SetValue(ManeuverQueue.configurationFiltersKey, (int)MapViewFiltering.VesselTypeFilter.All);
+			this.pluginConfiguration.save();
 
 			this.spaceTrackingScene = (SpaceTracking)UnityEngine.Object.FindObjectOfType(typeof(SpaceTracking));
 
@@ -138,20 +161,20 @@ namespace FatHand
 			};
 
 			GameEvents.onGameSceneSwitchRequested.Add(this.onGameSceneSwitchRequested);
+
 			GameEvents.onVesselDestroy.Add(this.onVesselDestroy);
 			GameEvents.onVesselCreate.Add(this.onVesselCreate);
 			GameEvents.onKnowledgeChanged.Add(this.onKnowledgeChanged);
 			GameEvents.OnMapViewFiltersModified.Add(this.onMapViewFiltersModified);
 
-
 			ManeuverQueue.filterModeLabels = Enum.GetValues(typeof(FilterMode)).Cast<FilterMode>().Where(
 				x => x != FilterMode.Undefined).Select(
 					x => ManeuverQueue.LabelForFilterMode(x)).ToArray();
 
-			this.pluginConfiguration.load();
 			this.currentMode = (FilterMode)this.pluginConfiguration.GetValue(ManeuverQueue.configurationModeKey, (int)FilterMode.Default);
 
 			this.render = true;
+
 		}
 
 		protected void Update()
@@ -160,6 +183,29 @@ namespace FatHand
 
 		protected void FixedUpdate()
 		{
+		}
+
+		private void onMapEntered()
+		{
+
+			this.pluginConfiguration.load();
+
+			MapViewFiltering.VesselTypeFilter stateToRestore = (MapViewFiltering.VesselTypeFilter)this.pluginConfiguration.GetValue(ManeuverQueue.configurationFiltersKey, (int)MapViewFiltering.VesselTypeFilter.All);
+			if (stateToRestore != MapViewFiltering.VesselTypeFilter.All)
+			{
+				MapViewFiltering.SetFilter(stateToRestore);
+				this.pluginConfiguration.SetValue(ManeuverQueue.configurationFiltersKey, ManeuverQueue.savedFilterState);
+				this.pluginConfiguration.save();
+
+			}
+
+			GameEvents.OnMapEntered.Remove(this.onMapEntered);
+
+		}
+
+		private void onGameSceneSwitchRequested(GameEvents.FromToAction<GameScenes, GameScenes> data)
+		{
+			this.render = false;
 		}
 
 		protected void OnDestroy()
@@ -171,14 +217,13 @@ namespace FatHand
 			GameEvents.onKnowledgeChanged.Remove(this.onKnowledgeChanged);
 			GameEvents.OnMapViewFiltersModified.Remove(this.onMapViewFiltersModified);
 
+			// This is a hack to ensure filter settings are retained
+			// Necessary because there doesn't seem to be any reliable way to restore filters when leaving the tracking station
+			this.pluginConfiguration.SetValue(ManeuverQueue.configurationFiltersKey, (int)ManeuverQueue.savedFilterState);
+			GameEvents.OnMapEntered.Add(this.onMapEntered);
+
 			this.pluginConfiguration.save();
 
-		}
-
-
-		private void onGameSceneSwitchRequested(GameEvents.FromToAction<GameScenes, GameScenes > fromToAction)
-		{
-			render = false;
 		}
 
 		protected void OnGUI()
@@ -216,16 +261,16 @@ namespace FatHand
 				case FilterMode.Undefined:
 					break;
 				case FilterMode.Default:
-					this.SetVesselList(this.defaultVessels);
+					this.SetVesselList(this.defaultVessels, ManeuverQueue.savedFilterState);
 					break;
 				case FilterMode.Maneuver:
-					this.SetVesselList(this.vesselsSortedByNextManeuverNode);
+					this.SetVesselList(this.vesselsSortedByNextManeuverNode, MapViewFiltering.VesselTypeFilter.All);
 					break;
 				case FilterMode.Name:
-					this.SetVesselList(this.vesselsSortedByName);
+					this.SetVesselList(this.vesselsSortedByName, ManeuverQueue.savedFilterState);
 					break;
 				default:
-					this.SetVesselList(this.defaultVessels);
+					this.SetVesselList(this.defaultVessels, ManeuverQueue.savedFilterState);
 					break;
 			}
 		}
@@ -251,7 +296,7 @@ namespace FatHand
 
 		}
 
-		protected void SetVesselList(List<Vessel> vessels)
+		protected void SetVesselList(List<Vessel> vessels, MapViewFiltering.VesselTypeFilter filters)
 		{
 			if (this.spaceTrackingScene == null)
 			{
@@ -265,6 +310,8 @@ namespace FatHand
 
 			clearMethod.Invoke(this.spaceTrackingScene, new object[0]);
 			constructMethod.Invoke(this.spaceTrackingScene, new object[0]);
+
+			MapViewFiltering.SetFilter(filters);
 
 			this.needsWidgetColorRender = true;
 
@@ -460,6 +507,11 @@ namespace FatHand
 		private void onMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
 		{
 			this.needsWidgetColorRender = true;
+		}
+
+		private static void OnMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
+		{
+			ManeuverQueue.savedFilterState = data;
 		}
 
 		private void ClearCachedVesselLists()
