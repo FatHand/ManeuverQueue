@@ -30,8 +30,11 @@ namespace FatHand
 			}
 			set
 			{
-				if (value != _currentMode)
+
+				// rebuild the list if the value is changed or the list is uninitialized
+				if (value != _currentMode || _defaultVessels == null)
 				{
+
 					// if we're switching from any mode other than maneuver mode, save the filter state
 					if (_currentMode != FilterMode.Maneuver && _currentMode != FilterMode.Undefined)
 					{
@@ -69,7 +72,7 @@ namespace FatHand
 			{
 				if (_defaultVessels == null)
 				{
-					_defaultVessels = GetTrackedVessels();
+					_defaultVessels = this.GetTrackedVessels();
 				}
 				return _defaultVessels;
 			}
@@ -313,8 +316,6 @@ namespace FatHand
 
 			MapViewFiltering.SetFilter(filters);
 
-			this.needsWidgetColorRender = true;
-
 			this.ResetWidgetsForActiveVessel();
 		}
 
@@ -396,25 +397,25 @@ namespace FatHand
 
 		protected void UpdateWidgetColorForCurrentTime(TrackingStationWidget widget)
 		{
+			ManeuverNode node = this.NextManeuverNodeForVessel(widget.vessel);
 
-			double maneuverTime = this.NextManeuverNodeForVessel(widget.vessel).UT;
+			if (node == null)
+			{
+				return;
+			}
+
+			double maneuverTime = node.UT;
 
 			// if the maneuver node is less than 15mins away - yellow
 			if (maneuverTime < Planetarium.GetUniversalTime() + minimumManeuverDeltaT)
 			{
-
 				this.ApplyColorToVesselWidget(widget, this.nodeWarningColor);
-
-
 			}
 
 			// if the maneuver nodes is in the past - red
 			if (maneuverTime < Planetarium.GetUniversalTime())
 			{
-
 				this.ApplyColorToVesselWidget(widget, this.nodePassedColor);
-
-
 			}
 
 		}
@@ -479,19 +480,17 @@ namespace FatHand
 			                                                   ManeuverQueue.filterModeLabels,
 															   HighLogic.Skin.button,
 															   new GUILayoutOption[] { GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false) });
-
-
 		}
 
 		private void onVesselDestroy(Vessel vessel)
 		{
-			this.ClearCachedVesselLists();
+			this.ResetVesselList();
 
 		}
 
 		private void onVesselCreate(Vessel vessel)
 		{
-			this.ClearCachedVesselLists();
+			this.ResetVesselList();
 		}
 
 		private void onKnowledgeChanged(GameEvents.HostedFromToAction<IDiscoverable, DiscoveryLevels> data)
@@ -499,9 +498,13 @@ namespace FatHand
 			if ((data.to & DiscoveryLevels.Unowned) == DiscoveryLevels.Unowned && this.currentMode == FilterMode.Maneuver)
 			{
 				this.currentMode = FilterMode.Default;
+
 			}
 
-			this.ClearCachedVesselLists();
+			this.ResetVesselList();
+
+
+
 		}
 
 		private void onMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
@@ -509,17 +512,12 @@ namespace FatHand
 			this.needsWidgetColorRender = true;
 		}
 
-		private static void OnMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
+		private void ResetVesselList()
 		{
-			ManeuverQueue.savedFilterState = data;
-		}
-
-		private void ClearCachedVesselLists()
-		{
-			this.currentMode = FilterMode.Undefined;
 			this.defaultVessels = null;
 			this.vesselsSortedByName = null;
 			this.vesselsSortedByNextManeuverNode = null;
+
 		}
 
 		public static string LabelForFilterMode(FilterMode mode)
