@@ -8,7 +8,7 @@
     <RootNamespace>ManeuverQueue</RootNamespace>
     <AssemblyName>ManeuverQueue</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <ReleaseVersion>0.2.1</ReleaseVersion>
+    <ReleaseVersion>0.3</ReleaseVersion>
     <UseMSBuildEngine>false</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
