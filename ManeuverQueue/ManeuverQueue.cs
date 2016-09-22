@@ -63,8 +63,8 @@ namespace FatHand
 		protected bool render;
 		protected bool needsWidgetColorRender;
 		protected const double minimumManeuverDeltaT = 15.0 * 60.0;
-		protected Color nodePassedColor = new Color(231.0f / 255, 106.0f / 255, 106.0f / 255, 1);
-		protected Color nodeWarningColor = new Color(254.0f / 255, 178.0f / 255, 0.0f / 255, 1);
+		protected Color nodePassedColor = new Color(255.0f / 255, 58.0f / 255, 58.0f / 255, 1);
+		protected Color nodeWarningColor = new Color(255.0f / 255, 255.0f / 255, 58.0f / 255, 1);
 
 		protected List<Vessel> defaultVessels
 		{
