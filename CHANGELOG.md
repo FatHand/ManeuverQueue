@@ -1,3 +1,10 @@
+## 0.3.0
+
+Features:
+
+  - Unsetting vessel filters when entering MNV mode and restoring when returning to MET or A-Z mode
+  - Brightened the colors
+
 ## 0.2.1
 
 Features:

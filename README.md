@@ -16,13 +16,13 @@ You can also build from source, but you'll need to ensure you add the correct ve
 
 ## Usage
 
-When the add on is installed you will see a small toolbar at the top left of the Tracking Station. Switching modes will sort and filter the list in the tracking station. All vessel type filters apply normally.
+When the add on is installed you will see a small toolbar at the top left of the Tracking Station. Switching modes will sort and filter the list in the tracking station.
 
-MET
+**MET**
 
 - Shows the default Tracking Station list
 
-MNV
+**MNV**
 
 - Shows only those ships with maneuvers nodes
 - Sorts ships by maneuver node time, earliest first
@@ -35,9 +35,13 @@ MNV
   - Red
     - The ship's next maneuver node is in the past
 
-A-Z
+**A-Z**
 
 - Shows the default list, sorted alphabetically
+
+**Vessel Type Filters**
+
+- Switching to MNV mode will unset all vessel type filters. Returning to MET or A-Z mode will restore filters set in those modes.
 
 ## Known Issues
 
@@ -45,4 +49,4 @@ A-Z
 
 ## Bugs and Feature Requests
 
-Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v021/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v021/)
+Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v030/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-12-maneuverqueue-v030/)
