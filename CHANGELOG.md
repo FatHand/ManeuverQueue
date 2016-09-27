@@ -1,3 +1,13 @@
+## 0.4.0
+
+Features:
+
+  - Stopping time warp when a maneuver node approaches
+ 
+Bugfixes:
+ 
+  - Fixed an issue that caused the list to render incorrectly in maneuver mode when an asteroid track is ended
+  
 ## 0.3.0
 
 Features:

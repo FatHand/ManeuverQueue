@@ -39,6 +39,10 @@ When the add on is installed you will see a small toolbar at the top left of the
 
 - Shows the default list, sorted alphabetically
 
+**Time Warp**
+
+- Time warp will slow to 1x when a maneuver node is 15m away. Very high speed warps can lag up to a few minutes when slowing
+
 **Vessel Type Filters**
 
 - Switching to MNV mode will unset all vessel type filters. Returning to MET or A-Z mode will restore filters set in those modes.
