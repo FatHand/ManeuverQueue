@@ -23,7 +23,7 @@ Global
 		{DE91AC52-37ED-45AB-98BF-4C5C3534025D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		version = 0.3
+		version = 0.4.0
 		description = ManeuverQueue is an add on for Kerbal Space Program that allows you to sort and filter objects displayed in the Tracking Station list.
 	EndGlobalSection
 EndGlobal
