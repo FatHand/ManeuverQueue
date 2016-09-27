@@ -79,6 +79,10 @@ namespace FatHand
 			set
 			{
 				_defaultVessels = value;
+				_vesselsSortedByName = null;
+				_vesselsSortedByNextManeuverNode = null;
+				_guardedVessels = null;
+
 			}
 		}
 
@@ -95,6 +99,26 @@ namespace FatHand
 			set
 			{
 				_vesselsSortedByNextManeuverNode = value;
+			}
+		}
+
+		protected List<Vessel> guardedVessels
+		{
+			get
+			{
+				if (_guardedVessels == null)
+				{
+					_guardedVessels = this.vesselsSortedByNextManeuverNode.Where((Vessel arg) => 
+						{ return this.NextManeuverNodeForVessel(arg).UT - Planetarium.GetUniversalTime() > ManeuverQueue.minimumManeuverDeltaT; }).ToList();
+					                                                             
+				}
+
+				return _guardedVessels;
+			}
+
+			set
+			{
+				_guardedVessels = value;
 			}
 		}
 
@@ -125,6 +149,7 @@ namespace FatHand
 		private List<Vessel> _defaultVessels;
 		private List<Vessel> _vesselsSortedByNextManeuverNode;
 		private List<Vessel> _vesselsSortedByName;
+		private List<Vessel> _guardedVessels;
 		private static MapViewFiltering.VesselTypeFilter savedFilterState;
 
 
@@ -182,6 +207,11 @@ namespace FatHand
 
 		protected void Update()
 		{
+			if (this.NextManeuverNodeForVessel(this.guardedVessels.ElementAt(0)).UT - Planetarium.GetUniversalTime() <= ManeuverQueue.minimumManeuverDeltaT)
+			{
+				TimeWarp.SetRate(0, true, true);
+				this.guardedVessels = null;
+			}
 		}
 
 		protected void FixedUpdate()
@@ -337,7 +367,7 @@ namespace FatHand
 					double mnvTime2 = this.NextManeuverNodeForVessel(nextVessel).UT;
 
 					// if two maneuver nodes are less than minimumManeuverDeltaT secs apart - yellow
-					if (mnvTime2 - mnvTime1 < minimumManeuverDeltaT)
+					if (mnvTime2 - mnvTime1 < ManeuverQueue.minimumManeuverDeltaT)
 					{
 						TrackingStationWidget nextVesselWidget = this.GetWidgetForVessel(nextVessel);
 
@@ -407,7 +437,7 @@ namespace FatHand
 			double maneuverTime = node.UT;
 
 			// if the maneuver node is less than 15mins away - yellow
-			if (maneuverTime < Planetarium.GetUniversalTime() + minimumManeuverDeltaT)
+			if (maneuverTime < Planetarium.GetUniversalTime() + ManeuverQueue.minimumManeuverDeltaT)
 			{
 				this.ApplyColorToVesselWidget(widget, this.nodeWarningColor);
 			}
@@ -515,9 +545,6 @@ namespace FatHand
 		private void ResetVesselList()
 		{
 			this.defaultVessels = null;
-			this.vesselsSortedByName = null;
-			this.vesselsSortedByNextManeuverNode = null;
-
 		}
 
 		public static string LabelForFilterMode(FilterMode mode)
