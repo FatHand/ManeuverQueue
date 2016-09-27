@@ -61,6 +61,7 @@ namespace FatHand
 		protected Rect windowPos;
 		protected GUIStyle windowStyle;
 		protected bool render;
+		protected bool needsRerender;
 		protected bool needsWidgetColorRender;
 		protected const double minimumManeuverDeltaT = 15.0 * 60.0;
 		protected Color nodePassedColor = new Color(255.0f / 255, 58.0f / 255, 58.0f / 255, 1);
@@ -264,6 +265,12 @@ namespace FatHand
 			if (this.render)
 			{
 				this.windowPos = GUILayout.Window(1, this.windowPos, this.ToolbarWindow, "", this.windowStyle, new GUILayoutOption[0]);
+
+				if (this.needsRerender)
+				{
+					this.SetVesselListForMode(this.currentMode);
+					this.needsRerender = false;
+				}
 
 				if (this.currentMode == FilterMode.Maneuver)
 				{
@@ -532,7 +539,7 @@ namespace FatHand
 			}
 
 			this.ResetVesselList();
-
+			this.needsRerender = true;
 
 
 		}
