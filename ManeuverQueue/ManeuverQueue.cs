@@ -208,7 +208,7 @@ namespace FatHand
 
 		protected void Update()
 		{
-			if (this.NextManeuverNodeForVessel(this.guardedVessels.ElementAt(0)).UT - Planetarium.GetUniversalTime() <= ManeuverQueue.minimumManeuverDeltaT)
+			if (this.guardedVessels.Count() > 0 && this.NextManeuverNodeForVessel(this.guardedVessels.ElementAt(0)).UT - Planetarium.GetUniversalTime() <= ManeuverQueue.minimumManeuverDeltaT)
 			{
 				TimeWarp.SetRate(0, true, true);
 				this.guardedVessels = null;
