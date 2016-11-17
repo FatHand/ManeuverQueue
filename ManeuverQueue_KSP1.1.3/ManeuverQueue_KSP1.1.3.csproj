@@ -9,7 +9,7 @@
     <AssemblyName>ManeuverQueue</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <UseMSBuildEngine>false</UseMSBuildEngine>
-    <ReleaseVersion>0.4.0</ReleaseVersion>
+    <ReleaseVersion>0.4.1</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
