@@ -1,3 +1,13 @@
+## 0.4.1
+
+Features:
+
+  - Rebuilt for KSP 1.2.1
+   
+Bugfixes:
+ 
+  - Fixed an out of bounds error when tracking zero vessels
+
 ## 0.4.0
 
 Features:
