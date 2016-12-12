@@ -1,3 +1,9 @@
+## 0.4.2
+   
+Bugfixes:
+ 
+  - Fixes an issue that caused the list to reset to MNV when terminating a vessel
+  
 ## 0.4.1
 
 Features:

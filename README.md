@@ -49,9 +49,9 @@ When the add on is installed you will see a small toolbar at the top left of the
 
 ## Known Issues
 
+- Linux is not supported
 - Certain tracking station operations such as untracking an object, terminating a vessel, or switching vessel filters causes the list to flicker momentarily
-- Potentially incompatible with Linux 64 bit installs. Would love some feedback from anyone on this.
 
 ## Bugs and Feature Requests
 
-Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v041/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v041/)
+Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v042/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v042/)
