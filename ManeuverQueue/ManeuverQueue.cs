@@ -103,6 +103,8 @@ namespace FatHand
 			}
 		}
 
+		// vessels with maneuver nodes in the future
+		// 'guarded' - prevent warping beyond next node
 		protected List<Vessel> guardedVessels
 		{
 			get
@@ -502,6 +504,7 @@ namespace FatHand
 
 		protected void ResetWidgetsForActiveVessel()
 		{
+
 			Vessel selectedVessel = this.GetTrackingStationSelectedVessel();
 
 			foreach (TrackingStationWidget widget in this.GetTrackingStationWidgets())
@@ -521,7 +524,9 @@ namespace FatHand
 
 		private void onVesselDestroy(Vessel vessel)
 		{
+
 			this.ResetVesselList();
+			this.needsRerender = true;
 
 		}
 
@@ -532,6 +537,7 @@ namespace FatHand
 
 		private void onKnowledgeChanged(GameEvents.HostedFromToAction<IDiscoverable, DiscoveryLevels> data)
 		{
+
 			if ((data.to & DiscoveryLevels.Unowned) == DiscoveryLevels.Unowned && this.currentMode == FilterMode.Maneuver)
 			{
 				this.currentMode = FilterMode.Default;
@@ -546,11 +552,13 @@ namespace FatHand
 
 		private void onMapViewFiltersModified(MapViewFiltering.VesselTypeFilter data)
 		{
+
 			this.needsWidgetColorRender = true;
 		}
 
 		private void ResetVesselList()
 		{
+
 			this.defaultVessels = null;
 		}
 
