@@ -1,10 +1,10 @@
 # ManeuverQueue
 
-ManeuverQueue is an add on for Kerbal Space Program that allows you to sort and filter objects displayed in the Tracking Station list. It was developed and tested against KSP v1.1.3 and v1.2.1
+ManeuverQueue is an add on for Kerbal Space Program that allows you to sort and filter objects displayed in the Tracking Station list. It was developed and tested against KSP v1.1.3 and v1.2.2
 
 ## Installation
 
-ManeuverQueue supports KSP v1.1.3 and v1.2-pre but it is important that you install the correct file. 
+ManeuverQueue supports KSP v1.1.3 and v1.2.x but it is important that you install the correct file. 
 
 [https://github.com/FatHand/ManeuverQueue/releases] (https://github.com/FatHand/ManeuverQueue/releases)
 - For v1.1.3 use **ManeuverQueue_KSP1.1.3.zip**
@@ -54,4 +54,4 @@ When the add on is installed you will see a small toolbar at the top left of the
 
 ## Bugs and Feature Requests
 
-Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v042/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-121-maneuverqueue-v042/)
+Feel free to submit issues or feature requests here or on the KSP forums [http://forum.kerbalspaceprogram.com/index.php?/topic/146568-122-maneuverqueue-v042/] (http://forum.kerbalspaceprogram.com/index.php?/topic/146568-122-maneuverqueue-v042/)
